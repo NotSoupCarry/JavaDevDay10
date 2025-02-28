@@ -1,0 +1,53 @@
+CREATE SCHEMA piccionaia;
+
+CREATE TABLE `specie` (
+  `ID` int NOT NULL AUTO_INCREMENT,
+  `name` varchar(225) NOT NULL,
+  `description` varchar(255) NOT NULL,
+  `lore` varchar(225) NOT NULL,
+  PRIMARY KEY (`ID`)
+)
+
+CREATE TABLE `piccionaia`.`nidi` (
+  `ID` INT NOT NULL AUTO_INCREMENT,
+  `name` VARCHAR(225) NOT NULL,
+  `dimension` ENUM("Grande", "Medio", "Piccolo") NULL,
+  `material` ENUM("Legno", "Pietra", "Ferro", "Oro", "Diamante", "Netherite") NULL,
+  PRIMARY KEY (`ID`));
+
+CREATE TABLE `piccioni` (
+  `ID` int NOT NULL AUTO_INCREMENT,
+  `IDSpecie` int NOT NULL,
+  `IDNest` int NOT NULL,
+  `Name` varchar(225) NOT NULL,
+  `BirthDate` date DEFAULT NULL,
+  `Weight` decimal(3,2) DEFAULT NULL,
+  PRIMARY KEY (`ID`),
+  KEY `FK_PICCIONI_SPECIE_idx` (`IDSpecie`),
+  KEY `FK_PICCIONE_NIDI_idx` (`IDNest`),
+  CONSTRAINT `FK_PICCIONE_NIDI` FOREIGN KEY (`IDNest`) REFERENCES `nidi` (`ID`),
+  CONSTRAINT `FK_PICCIONI_SPECIE` FOREIGN KEY (`IDSpecie`) REFERENCES `specie` (`ID`)
+) 
+
+
+/* INSERT
+-- Inserimento di 3 specie di piccioni
+INSERT INTO specie (ID, name, description, lore) VALUES
+(1, 'Piccione Selvatico', 'Vola libero nelle città', "Il Piccione Selvatico è discendente della famiglia dei draghi, noto per il suo essere un po' napoletano"),
+(2, 'Piccione Reale', 'Discendente di una nobile stirpe', "Il Piccione Reale era noto come re nel regno di piccionaia, ora un nobile caduto fa cra cra nella sua gabbia"),
+(3, 'Piccione Viaggiatore', 'Esperto in messaggi a lunga distanza', "Il Piccione Selvatico non sa leggere");
+
+-- Inserimento di 3 nidi con materiali e dimensioni casuali
+INSERT INTO nidi (name, dimension, material) VALUES
+('Nido di Quercia', 'Grande', 'Legno'),
+('Nido di Roccia', 'Medio', 'Pietra'),
+('Nido SUPREMO', 'Piccolo', 'Netherite');
+
+-- Inserimento di 5 piccioni associati a specie e nidi casuali
+INSERT INTO piccioni (IDSpecie, IDNest, Name, BirthDate, Weight) VALUES
+(1, 1, 'Pico', '2023-05-12', 0.35),
+(2, 2, 'Re Pigeon', '2022-10-07', 0.40),
+(3, 1, 'Flash', '2021-08-25', 0.38),
+(1, 3, 'Fuffi', '2023-01-15', 0.32),
+(2, 2, 'Gigi', '2020-12-05', 0.45);
+*/
