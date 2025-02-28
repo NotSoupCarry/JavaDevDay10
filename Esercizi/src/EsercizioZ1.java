@@ -36,8 +36,18 @@ public class EsercizioZ1 {
         return conn;
     }
 
-    public static void main(String[] args) throws Exception {
-        System.out.println("Hello, World!");
+    public static void main(String[] args) {
+        Connection conn = connessioneDatabase();
+        if (conn != null) {
+            Scanner scanner = new Scanner(System.in);
+            try {
+                mostraMenuPrincipale(scanner, conn);
+            } catch (SQLException e) {
+                e.printStackTrace();
+            }
+        } else {
+            System.out.println("Connessione al database fallita.");
+        }
     }
 
     // Metodo per la creazione degli statement scrollable e updatable
@@ -54,49 +64,50 @@ public class EsercizioZ1 {
         }
     }
 
-    //#region METODI PER LA GESTIONE DELLE MODIFICHE E VISUALIZZAZIONE SUL DB  
+    // #region METODI PER LA GESTIONE DELLE MODIFICHE E VISUALIZZAZIONE SUL DB
     public static void aggiungiPiccione(Connection conn, Scanner scanner) {
         try {
             System.out.println("\n=== Aggiungi un nuovo Piccione ===");
             // Chiede i dati all'utente
             System.out.print("Inserisci l'ID della specie: ");
             int idSpecie = scanner.nextInt();
-            scanner.nextLine(); 
-    
+            scanner.nextLine();
+
             System.out.print("Inserisci l'ID del nido: ");
             int idNest = scanner.nextInt();
             scanner.nextLine();
-    
+
             System.out.print("Inserisci il nome del piccione: ");
             String name = scanner.nextLine();
-    
+
             System.out.print("Inserisci la data di nascita (YYYY-MM-DD) oppure premi Enter per lasciare null: ");
             String birthDate = scanner.nextLine();
-            if (birthDate.isEmpty()) birthDate = null;
-    
+            if (birthDate.isEmpty())
+                birthDate = null;
+
             System.out.print("Inserisci il peso oppure premi Enter per lasciare null: ");
             String pesoInput = scanner.nextLine();
             Double weight = pesoInput.isEmpty() ? null : Double.parseDouble(pesoInput);
-    
+
             // Query SQL per l'inserimento
             String sql = "INSERT INTO piccioni (IDSpecie, IDNest, Name, BirthDate, Weight) VALUES (?, ?, ?, ?, ?)";
             try (PreparedStatement pstmt = conn.prepareStatement(sql)) {
                 pstmt.setInt(1, idSpecie);
                 pstmt.setInt(2, idNest);
                 pstmt.setString(3, name);
-    
+
                 if (birthDate != null) {
                     pstmt.setDate(4, java.sql.Date.valueOf(birthDate));
                 } else {
                     pstmt.setNull(4, java.sql.Types.DATE);
                 }
-    
+
                 if (weight != null) {
                     pstmt.setDouble(5, weight);
                 } else {
                     pstmt.setNull(5, java.sql.Types.DOUBLE);
                 }
-    
+
                 int rowsInserted = pstmt.executeUpdate();
                 if (rowsInserted > 0) {
                     System.out.println("Piccione aggiunto con successo!");
@@ -108,9 +119,9 @@ public class EsercizioZ1 {
             e.printStackTrace();
         }
     }
-    
-    //#endregion
-    
+
+    // #endregion
+
     // #region METODI DEI MENU
     // Metodo per il menu principale
     public static void mostraMenuPrincipale(Scanner scanner, Connection conn) throws SQLException {
@@ -128,13 +139,14 @@ public class EsercizioZ1 {
 
             switch (scelta) {
                 case 1:
+                    aggiungiPiccione(conn, scanner);
                     break;
                 case 2:
                     break;
                 case 3:
                     break;
                 case 4:
-                    mostraSottoMenuTriggers(conn, scanner);
+                    // mostraSottoMenuTriggers(conn, scanner);
                     break;
                 case 5:
                     System.out.println("CIAOOOO");
