@@ -547,57 +547,68 @@ public class EsercizioZ1 {
 
     // Creare un Trigger per la tabella Piccioni
     public static void creaTrigger(Connection conn) throws SQLException {
-        String pigeonTrigger = "CREATE TABLE IF NOT EXISTS piccioni_log ( " +
-                "ID INT, " +
-                "idnest INT, " +
-                "Name VARCHAR(255), " +
-                "Birthdate DATE, " +
-                "Weight DOUBLE, " +
-                "creationDate TIMESTAMP DEFAULT CURRENT_TIMESTAMP, " +
-                "motivo VARCHAR(255) " +
-                ");";
+        // Controllo se i trigger esistono già
+        if (!esisteTrigger(conn, "after_update_pigeon")) {
+            String triggerUpdate = "CREATE TRIGGER after_update_pigeon AFTER UPDATE ON piccioni " +
+                    "FOR EACH ROW " +
+                    "BEGIN " +
+                    "    IF NEW.Name != OLD.Name AND EXISTS (SELECT 1 FROM piccioni WHERE Name = NEW.Name) THEN " +
+                    "        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Errore: Il nome deve essere univoco!'; " +
+                    "    END IF; " +
+                    "    INSERT INTO piccioni_log (ID, idnest, Name, birthdate, weight, creationDate, motivo) " +
+                    "    VALUES (OLD.ID, OLD.idnest, OLD.Name, OLD.birthdate, OLD.weight, NOW(), 'Aggiornamento di un piccione'); "
+                    +
+                    "    INSERT INTO piccioni_log (ID, idnest, Name, birthdate, weight, creationDate, motivo) " +
+                    "    VALUES (NEW.ID, NEW.idnest, NEW.Name, NEW.birthdate, NEW.weight, NOW(), 'Aggiornamento di un piccione'); "
+                    +
+                    "END;";
 
-        String triggerUpdate = "CREATE TRIGGER after_update_pigeon AFTER UPDATE ON piccioni " +
-                "FOR EACH ROW " +
-                "BEGIN " +
-                "INSERT INTO piccioni_log (ID, idnest, Name, birthdate, weight, timestamp, action) " +
-                "VALUES (OLD.ID, OLD.idnest, OLD.Name, OLD.birthdate, OLD.weight, NOW(), 'Aggiornamento di un piccione'); "
-                +
-                "INSERT INTO piccioni_log (ID, idnest, Name, birthdate, weight, timestamp, action) " +
-                "VALUES (NEW.ID, NEW.idnest, NEW.Name, NEW.birthdate, NEW.weight, NOW(), 'Aggiornamento di un piccione'); "
-                +
-                "END;";
+            PreparedStatement pstmt = createPreparedStatement(conn, triggerUpdate);
+            pstmt.executeUpdate();
+            System.out.println("Trigger di aggiornamento creato con successo.");
+        }
 
-        // Trigger per la cancellazione di una riga nella tabella piccioni
-        String triggerDelete = "CREATE TRIGGER before_pigeon_delete BEFORE DELETE ON piccioni " +
-                "FOR EACH ROW " +
-                "BEGIN " +
-                "INSERT INTO piccioni_log (ID, idnest, Name, birthdate, weight, timestamp, action) " +
-                "VALUES (OLD.ID, OLD.idnest, OLD.Name, OLD.birthdate, OLD.weight, NOW(), 'Cancellazione di un piccione'); "
-                +
-                "INSERT INTO piccioni_log (ID, idnest, Name, birthdate, weight, timestamp, action) " +
-                "VALUES (NEW.ID, NEW.idnest, NEW.Name, NEW.birthdate, NEW.weight, NOW(), 'Cancellazione di un piccione'); "
-                +
-                "END;";
+        if (!esisteTrigger(conn, "before_pigeon_delete")) {
+            String triggerDelete = "CREATE TRIGGER before_pigeon_delete BEFORE DELETE ON piccioni " +
+                    "FOR EACH ROW " +
+                    "BEGIN " +
+                    "    INSERT INTO piccioni_log (ID, idnest, Name, birthdate, weight, creationDate, motivo) " +
+                    "    VALUES (OLD.ID, OLD.idnest, OLD.Name, OLD.birthdate, OLD.weight, NOW(), 'Cancellazione di un piccione'); "
+                    +
+                    "END;";
 
-        // Trigger per impedire l'inserimento di un piccione con nome duplicato
-        String triggerInsert = "CREATE TRIGGER before_pigeon_insert BEFORE INSERT ON piccioni " +
-                "FOR EACH ROW " +
-                "BEGIN " +
-                "IF EXISTS (SELECT 1 FROM piccioni WHERE Name = NEW.Name) THEN " +
-                "SIGNAL SQLSTATE '45000' " +
-                "SET MESSAGE_TEXT = 'Errore: Il nome deve essere univoco!'; " +
-                "END IF; " +
-                "END;";
+            PreparedStatement pstmt = createPreparedStatement(conn, triggerDelete);
+            pstmt.executeUpdate();
+            System.out.println("Trigger di cancellazione creato con successo.");
+        }
 
-        PreparedStatement pstmt = createPreparedStatement(conn, pigeonTrigger);
-        pstmt.executeUpdate(pigeonTrigger);
+        if (!esisteTrigger(conn, "before_pigeon_insert")) {
+            String triggerInsert = "CREATE TRIGGER before_pigeon_insert BEFORE INSERT ON piccioni " +
+                    "FOR EACH ROW " +
+                    "BEGIN " +
+                    "    IF EXISTS (SELECT 1 FROM piccioni WHERE Name = NEW.Name) THEN " +
+                    "        SIGNAL SQLSTATE '45000' SET MESSAGE_TEXT = 'Errore: Il nome deve essere univoco!'; " +
+                    "    END IF; " +
+                    "END;";
 
-        pstmt.executeUpdate(triggerUpdate);
-        pstmt.executeUpdate(triggerDelete);
-        pstmt.executeUpdate(triggerInsert);
+            PreparedStatement pstmt = createPreparedStatement(conn, triggerInsert);
+            pstmt.executeUpdate();
+            System.out.println("Trigger di inserimento creato con successo.");
+        }
+    }
 
-        System.out.println("TRIGGER AGGIUNTO CON SUCCESSO!!! BRAVO");
+    // Metodo per verificare se un trigger esiste già nel database
+    public static boolean esisteTrigger(Connection conn, String triggerName) throws SQLException {
+        String query = "SELECT COUNT(*) FROM information_schema.TRIGGERS WHERE TRIGGER_NAME = ?";
+        try (PreparedStatement pstmt = conn.prepareStatement(query)) {
+            pstmt.setString(1, triggerName);
+            try (ResultSet rs = pstmt.executeQuery()) {
+                if (rs.next()) {
+                    return rs.getInt(1) > 0; // Restituisce true se il trigger esiste
+                }
+            }
+        }
+        return false; // Se non esiste
     }
 
     // #endregion
@@ -641,7 +652,7 @@ public class EsercizioZ1 {
                     mostraPiccioni(conn);
                     break;
                 case 7:
-                    System.out.println("CIAOOOO");
+                    System.out.println("CIAOOOO CRA CRA");
                     exitMainMenu = true;
                     break;
                 default:
