@@ -616,7 +616,7 @@ public class EsercizioZ1 {
     // #region METODI DEI MENU
     // Metodo per il menu principale
     public static void mostraMenuPrincipale(Scanner scanner, Connection conn) throws SQLException {
-        // creaTrigger(conn);
+        creaTrigger(conn);
         int scelta;
         boolean exitMainMenu = false;
         while (!exitMainMenu) {
